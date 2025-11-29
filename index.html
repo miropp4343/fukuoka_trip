@@ -2,7 +2,10 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>北九州+廣島 旅行回憶地圖 🗾</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -18,6 +21,11 @@
             background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             min-height: 100vh;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* 觸控優化 */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .container {
@@ -58,6 +66,9 @@
             padding: 20px;
             max-height: 600px;
             overflow-y: auto;
+            /* 平滑滾動 */
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
 
         .map-container {
@@ -81,6 +92,9 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            /* 觸控友善 */
+            min-height: 44px;
+            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
         }
 
         .day-card:hover {
@@ -594,23 +608,194 @@
             margin-right: 8px;
         }
 
+        /* 平板優化 (768px - 1024px) */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .sidebar {
+                width: 300px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* 手機優化 (最重要!) */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+            }
+
             .content {
                 flex-direction: column;
             }
             
+            /* 側邊欄調整 */
             .sidebar {
                 width: 100%;
-                max-height: 300px;
+                max-height: 250px;
+                padding: 15px;
+                order: 2; /* 地圖先顯示 */
             }
             
+            /* 地圖容器 */
             .map-container {
                 min-width: 100%;
-                height: 400px;
+                height: 450px; /* 加高讓手機更好操作 */
+                order: 1;
+            }
+
+            /* 標題區塊 */
+            .header {
+                padding: 20px 15px;
             }
 
             .header h1 {
-                font-size: 1.8em;
+                font-size: 1.6em;
+                line-height: 1.3;
+            }
+
+            .header p {
+                font-size: 0.95em;
+            }
+
+            /* 卡片調整 */
+            .day-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .day-number {
+                font-size: 0.85em;
+                padding: 4px 10px;
+            }
+
+            .day-title {
+                font-size: 1em;
+            }
+
+            .day-location {
+                font-size: 0.85em;
+            }
+
+            /* Modal彈窗優化 */
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+                border-radius: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.4em;
+            }
+
+            .modal-location {
+                font-size: 1em;
+            }
+
+            /* 關閉按鈕加大(觸控友善) */
+            .close-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.6em;
+            }
+
+            /* 照片網格 */
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+            }
+
+            /* 上傳區域 */
+            .upload-area {
+                padding: 20px;
+            }
+
+            .upload-icon {
+                font-size: 2.5em;
+            }
+
+            /* 人物標記側邊欄 */
+            .people-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .people-sidebar-header {
+                padding: 20px 15px;
+            }
+
+            .people-sidebar-header h2 {
+                font-size: 1.3em;
+            }
+
+            /* 標記工具 */
+            .tag-tools {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tag-button, .done-tagging-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+            /* 圖例 */
+            .legend {
+                padding: 12px;
+            }
+
+            .legend h4 {
+                font-size: 0.95em;
+            }
+
+            .legend-item {
+                font-size: 0.85em;
+            }
+
+            /* Leaflet地圖控制項放大 */
+            .leaflet-control-zoom a {
+                width: 36px !important;
+                height: 36px !important;
+                line-height: 36px !important;
+                font-size: 20px !important;
+            }
+
+            .leaflet-touch .leaflet-control-layers, 
+            .leaflet-touch .leaflet-bar {
+                border: 2px solid rgba(0,0,0,0.2) !important;
+            }
+        }
+
+        /* 小手機優化 (360px以下) */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.4em;
+            }
+
+            .map-container {
+                height: 400px;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+
+        /* 橫向模式 (手機橫放) */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .map-container {
+                height: 350px;
+            }
+
+            .sidebar {
+                max-height: 200px;
             }
         }
 
@@ -1006,7 +1191,8 @@
                 coordinates: [33.2644, 131.3628], // 由布院
                 secondaryCoords: [33.2779057, 131.446179], // 近鐵別府空中纜車
                 accommodation: "山莊神和苑",
-                accommodationCoords: [33.3162164, 131.4714025]
+                accommodationCoords: [33.3162164, 131.4714025],
+                
             },
             {
                 day: 7,
