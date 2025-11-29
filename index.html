@@ -2,11 +2,29 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>北九州+廣島 旅行回憶地圖 🗾</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Fonts - 手寫字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <style>
+        /* 自訂字體 - 取消下面註解並替換字體檔案路徑 */
+
+        @font-face {
+            font-family: 'MyCustomFont';
+            src: url('fonts/MOTOGI.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+
         * {
             margin: 0;
             padding: 0;
@@ -18,6 +36,11 @@
             background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             min-height: 100vh;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* 觸控優化 */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .container {
@@ -30,39 +53,116 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* 預設漸層背景,可以用背景圖片替換 */
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
+                        url('images/header-bg.jpg'); /* ← 在這裡放你的照片網址 */
+            background-size: cover;
+            background-position: center;
             color: white;
-            padding: 30px;
+            padding: 60px 30px;
             text-align: center;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 如果沒有背景圖片,顯示純漸層 */
+        .header.no-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            /* 使用自訂字體:把下面這行的註解拿掉,並註解掉 font-family 那行 */
+            /* font-family: 'MyCustomFont', cursive; */
+            
+            /* 預設Google Fonts手寫字體 */
+            font-family: 'Dancing Script', 'Pacifico', cursive;
+            
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.5),
+                         -1px -1px 2px rgba(0,0,0,0.3);
+            font-weight: 700;
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
         }
 
         .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+            font-size: 1.2em;
+            opacity: 1;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.6),
+                         -1px -1px 2px rgba(0,0,0,0.3);
+            font-weight: 500;
+            letter-spacing: 1px;
         }
 
         .content {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
 
         .sidebar {
-            width: 350px;
-            background: #f8f9fa;
-            padding: 20px;
-            max-height: 600px;
-            overflow-y: auto;
+            width: 100%;
+            background: white;
+            padding: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .days-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            gap: 15px;
+            padding: 0 60px 15px 60px;
+            /* 隱藏滾動條但保持功能 */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .days-slider::-webkit-scrollbar {
+            display: none;
+        }
+
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .slider-arrow:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+        }
+
+        .slider-arrow.left {
+            left: 10px;
+        }
+
+        .slider-arrow.right {
+            right: 10px;
         }
 
         .map-container {
-            flex: 1;
-            min-width: 500px;
+            width: 100%;
             height: 600px;
             position: relative;
         }
@@ -76,21 +176,29 @@
             background: white;
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            border: 2px solid #e9ecef;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            /* 觸控友善 */
+            min-height: 44px;
+            -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
+            /* 幻燈片樣式 */
+            min-width: 280px;
+            max-width: 280px;
+            flex-shrink: 0;
         }
 
         .day-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            border-color: #667eea;
         }
 
         .day-card.active {
-            border-left-color: #764ba2;
+            border-color: #764ba2;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            box-shadow: 0 6px 16px rgba(118, 75, 162, 0.3);
         }
 
         .day-number {
@@ -594,23 +702,212 @@
             margin-right: 8px;
         }
 
+        /* 平板優化 (768px - 1024px) */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .day-card {
+                min-width: 260px;
+                max-width: 260px;
+            }
+        }
+
+        /* 手機優化 (最重要!) */
         @media (max-width: 768px) {
-            .content {
-                flex-direction: column;
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
             }
             
+            /* 側邊欄調整 */
             .sidebar {
-                width: 100%;
-                max-height: 300px;
+                padding: 15px 0;
+            }
+
+            .days-slider {
+                padding: 0 50px 15px 50px;
+                gap: 10px;
+            }
+
+            .slider-arrow {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .slider-arrow.left {
+                left: 5px;
+            }
+
+            .slider-arrow.right {
+                right: 5px;
             }
             
+            /* 地圖容器 */
             .map-container {
-                min-width: 100%;
-                height: 400px;
+                width: 100%;
+                height: 450px;
+            }
+
+            /* 標題區塊 */
+            .header {
+                padding: 40px 15px;
+                min-height: 150px;
             }
 
             .header h1 {
-                font-size: 1.8em;
+                font-size: 2em;
+                line-height: 1.3;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            /* 卡片調整 */
+            .day-card {
+                padding: 12px;
+                min-width: 240px;
+                max-width: 240px;
+            }
+
+            .day-number {
+                font-size: 0.85em;
+                padding: 4px 10px;
+            }
+
+            .day-title {
+                font-size: 1em;
+            }
+
+            .day-location {
+                font-size: 0.85em;
+            }
+
+            /* Modal彈窗優化 */
+            .modal-content {
+                width: 95%;
+                max-width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+                border-radius: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.4em;
+            }
+
+            .modal-location {
+                font-size: 1em;
+            }
+
+            /* 關閉按鈕加大(觸控友善) */
+            .close-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.6em;
+            }
+
+            /* 照片網格 */
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+            }
+
+            /* 上傳區域 */
+            .upload-area {
+                padding: 20px;
+            }
+
+            .upload-icon {
+                font-size: 2.5em;
+            }
+
+            /* 人物標記側邊欄 */
+            .people-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .people-sidebar-header {
+                padding: 20px 15px;
+            }
+
+            .people-sidebar-header h2 {
+                font-size: 1.3em;
+            }
+
+            /* 標記工具 */
+            .tag-tools {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tag-button, .done-tagging-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+            /* 圖例 */
+            .legend {
+                padding: 12px;
+            }
+
+            .legend h4 {
+                font-size: 0.95em;
+            }
+
+            .legend-item {
+                font-size: 0.85em;
+            }
+
+            /* Leaflet地圖控制項放大 */
+            .leaflet-control-zoom a {
+                width: 36px !important;
+                height: 36px !important;
+                line-height: 36px !important;
+                font-size: 20px !important;
+            }
+
+            .leaflet-touch .leaflet-control-layers, 
+            .leaflet-touch .leaflet-bar {
+                border: 2px solid rgba(0,0,0,0.2) !important;
+            }
+        }
+
+        /* 小手機優化 (360px以下) */
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.4em;
+            }
+
+            .map-container {
+                height: 400px;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+
+        /* 橫向模式 (手機橫放) */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .map-container {
+                height: 400px;
+            }
+
+            .sidebar {
+                padding: 10px 0;
+            }
+
+            .days-slider {
+                padding: 0 50px 10px 50px;
             }
         }
 
@@ -694,47 +991,102 @@
             }
         }
 
-        /* Hotel photo marker styles */
-        .hotel-photo-marker {
+        /* Hotel photo marker styles - Google Maps style */
+        .hotel-marker-pin {
             position: relative;
-            cursor: pointer;
+            width: 40px;
+            height: 50px;
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        .hotel-photo-marker img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 16px;
-            border: 4px solid #ff6b6b;
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.5);
-            transition: all 0.4s ease;
-            background: white;
-        }
-
-        .hotel-photo-marker:hover img {
-            transform: translateY(-12px) scale(1.2);
-            box-shadow: 0 20px 45px rgba(255, 107, 107, 0.7);
-            border-color: #ff4444;
-        }
-
-        .hotel-placeholder {
-            width: 100px;
-            height: 100px;
-            background: white;
-            border-radius: 16px;
+        .hotel-marker-circle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #ff4444;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.6);
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.5);
-            border: 4px solid #ff6b6b;
-            font-size: 40px;
-            transition: all 0.4s ease;
         }
 
-        .hotel-photo-marker:hover .hotel-placeholder {
-            transform: translateY(-12px) scale(1.2);
-            box-shadow: 0 20px 45px rgba(255, 107, 107, 0.7);
+        .hotel-marker-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hotel-marker-circle .hotel-icon {
+            font-size: 16px;
+            filter: brightness(0) invert(1);
+        }
+
+        .hotel-marker-point {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 18px solid #ff4444;
+            filter: drop-shadow(0 3px 6px rgba(255, 68, 68, 0.4));
+        }
+
+        .hotel-marker-pin:hover {
+            transform: translateY(-8px) scale(1.15);
+        }
+
+        .hotel-marker-pin:hover .hotel-marker-circle {
+            box-shadow: 0 8px 20px rgba(255, 68, 68, 0.8);
+        }
+
+        /* 縮放等級調整 */
+        .hotel-marker-small .hotel-marker-pin {
+            width: 28px;
+            height: 36px;
+        }
+
+        .hotel-marker-small .hotel-marker-circle {
+            width: 24px;
+            height: 24px;
+        }
+
+        .hotel-marker-small .hotel-marker-circle .hotel-icon {
+            font-size: 12px;
+        }
+
+        .hotel-marker-small .hotel-marker-point {
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 14px solid #ff4444;
+        }
+
+        .hotel-marker-large .hotel-marker-pin {
+            width: 50px;
+            height: 62px;
+        }
+
+        .hotel-marker-large .hotel-marker-circle {
+            width: 40px;
+            height: 40px;
+        }
+
+        .hotel-marker-large .hotel-marker-circle .hotel-icon {
+            font-size: 20px;
+        }
+
+        .hotel-marker-large .hotel-marker-point {
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 22px solid #ff4444;
         }
 
         /* Shinkansen animation */
@@ -841,13 +1193,17 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🗾 北九州+廣島 旅行回憶地圖</h1>
-            <p>點擊景點查看詳情並上傳照片 📸</p>
+            <h1>北九州 広島 旅の思い出 マップ</h1>
+            <p>スポットをクリックして詳細を見る 📸</p>
         </div>
         
         <div class="content">
-            <div class="sidebar" id="sidebar">
-                <!-- Days will be populated by JavaScript -->
+            <div class="sidebar">
+                <button class="slider-arrow left" onclick="scrollSlider(-1)">‹</button>
+                <div class="days-slider" id="sidebar">
+                    <!-- Days will be populated by JavaScript -->
+                </div>
+                <button class="slider-arrow right" onclick="scrollSlider(1)">›</button>
             </div>
             
             <div class="map-container">
@@ -1006,7 +1362,8 @@
                 coordinates: [33.2644, 131.3628], // 由布院
                 secondaryCoords: [33.2779057, 131.446179], // 近鐵別府空中纜車
                 accommodation: "山莊神和苑",
-                accommodationCoords: [33.3162164, 131.4714025]
+                accommodationCoords: [33.3162164, 131.4714025],
+                
             },
             {
                 day: 7,
@@ -1085,6 +1442,7 @@
         let transportationLayers = []; // Store transportation layers for toggling
         let characterMarker = null; // The character marker on the map
         let currentDayIndex = null; // Track which day the character is on
+        let hotelMarkers = []; // Store hotel markers for zoom updates
 
         // Initialize photos from localStorage
         function loadPhotos() {
@@ -1198,26 +1556,44 @@
                     // Get hotel photo if available
                     const hotelPhoto = location.hotelPhoto || null;
                     
-                    // Create custom hotel icon with real photo (no name tag)
-                    const hotelIcon = L.divIcon({
-                        html: `
-                            <div class="hotel-photo-marker">
-                                ${hotelPhoto ? `
-                                    <img src="${hotelPhoto}" alt="${location.accommodation}" />
-                                ` : `
-                                    <div class="hotel-placeholder">🏨</div>
-                                `}
-                            </div>
-                        `,
-                        className: '',
-                        iconSize: [100, 100],
-                        iconAnchor: [50, 50]
-                    });
+                    // Create custom hotel icon - Google Maps style
+                    const createHotelIcon = (zoomLevel) => {
+                        let sizeClass = '';
+                        if (zoomLevel <= 8) sizeClass = 'hotel-marker-small';
+                        else if (zoomLevel >= 11) sizeClass = 'hotel-marker-large';
+                        
+                        return L.divIcon({
+                            html: `
+                                <div class="${sizeClass}">
+                                    <div class="hotel-marker-pin">
+                                        <div class="hotel-marker-circle">
+                                            ${hotelPhoto ? `
+                                                <img src="${hotelPhoto}" alt="${location.accommodation}" />
+                                            ` : `
+                                                <span class="hotel-icon">🏨</span>
+                                            `}
+                                        </div>
+                                        <div class="hotel-marker-point"></div>
+                                    </div>
+                                </div>
+                            `,
+                            className: '',
+                            iconSize: [40, 50],
+                            iconAnchor: [20, 50],
+                            popupAnchor: [0, -50]
+                        });
+                    };
 
                     const accomMarker = L.marker(location.accommodationCoords, {
-                        icon: hotelIcon,
+                        icon: createHotelIcon(map.getZoom()),
                         zIndexOffset: 500
                     }).addTo(map);
+
+                    // Store marker and its update function
+                    hotelMarkers.push({
+                        marker: accomMarker,
+                        updateIcon: createHotelIcon
+                    });
 
                     // Show details only when clicked
                     accomMarker.bindPopup(`
@@ -1228,6 +1604,14 @@
                         </div>
                     `);
                 }
+            });
+
+            // Add unified zoom listener for all hotel markers (performance optimization)
+            map.on('zoomend', () => {
+                const currentZoom = map.getZoom();
+                hotelMarkers.forEach(({ marker, updateIcon }) => {
+                    marker.setIcon(updateIcon(currentZoom));
+                });
             });
         }
 
@@ -1332,6 +1716,16 @@
                     ${photos[index] && photos[index].length > 0 ? `<div class="day-location">📸 ${photos[index].length} 張照片</div>` : ''}
                 </div>
             `).join('');
+        }
+
+        // 幻燈片滾動控制
+        function scrollSlider(direction) {
+            const slider = document.getElementById('sidebar');
+            const scrollAmount = 300; // 每次滾動的距離
+            slider.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
         }
 
         function selectLocation(index) {
