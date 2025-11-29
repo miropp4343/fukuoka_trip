@@ -15,14 +15,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         /* 自訂字體 - 取消下面註解並替換字體檔案路徑 */
-
+        /*
         @font-face {
             font-family: 'MyCustomFont';
-            src: url('fonts/MOTOGI.TTF') format('truetype');
+            src: url('fonts/your-font.woff2') format('woff2'),
+                 url('fonts/your-font.woff') format('woff'),
+                 url('fonts/your-font.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
         }
+        */
 
         * {
             margin: 0;
@@ -52,33 +55,60 @@
         }
 
         .header {
-            /* 預設漸層背景,可以用背景圖片替換 */
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%),
-                        url('images/header-bg.jpg'); /* ← 在這裡放你的照片網址 */
-            background-size: cover;
-            background-position: center;
+            position: relative;
             color: white;
             padding: 60px 30px;
             text-align: center;
-            position: relative;
             min-height: 200px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            /* 備用背景(如果影片載入失敗) */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        /* 如果沒有背景圖片,顯示純漸層 */
-        .header.no-image {
+        /* 背景影片 */
+        .header-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            transform: translate(-90%, -50%) scale(1.05);
+            z-index: 0;
+            object-fit: contain ; /* 完整顯示影片,不裁切 */
+        }
+
+        /* 遮罩層(讓文字更清楚) */
+        .header-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            z-index: 1;
+        }
+
+        /* 文字內容容器 */
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 如果沒有影片,使用純漸層背景 */
+        .header.no-video {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .header h1 {
             /* 使用自訂字體:把下面這行的註解拿掉,並註解掉 font-family 那行 */
-            font-family: 'MyCustomFont', cursive; 
+            /* font-family: 'MyCustomFont', cursive; */
             
             /* 預設Google Fonts手寫字體 */
-            /* font-family: 'Dancing Script', 'Pacifico', cursive; */
+            font-family: 'Dancing Script', 'Pacifico', cursive;
             
             font-size: 3.5em;
             margin-bottom: 15px;
@@ -759,6 +789,16 @@
                 min-height: 150px;
             }
 
+            .header-video {
+                /* 確保影片在手機上完整顯示,不裁切 */
+                object-fit: contain;
+            }
+
+            .header-overlay {
+                /* 降低遮罩不透明度,讓影片更清楚 */
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.35) 0%, rgba(118, 75, 162, 0.35) 100%);
+            }
+
             .header h1 {
                 font-size: 2em;
                 line-height: 1.3;
@@ -1192,8 +1232,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>北九州 広島 旅の思い出 マップ</h1>
-            <p>スポットをクリックして詳細を見る 📸</p>
+            <!-- 背景影片 -->
+            <video class="header-video" autoplay muted loop playsinline>
+                <source src="video/background.mp4" type="video/mp4">
+                <!-- 如果瀏覽器不支援影片,顯示備用圖片 -->
+                您的瀏覽器不支援影片播放
+            </video>
+            <!-- 遮罩層 -->
+
         </div>
         
         <div class="content">
@@ -1308,7 +1354,7 @@
                 day: 1,
                 title: "南藏院",
                 location: "福岡県篠栗町",
-                coordinates: [33.6198424,130.570398], // 精確座標
+                coordinates: [33.619838, 130.5729783], // 精確座標
                 accommodation: "小倉麗嘉皇家酒店",
                 accommodationCoords: [33.888163, 130.8850861],
                 type: "attraction"
@@ -1328,16 +1374,17 @@
                 title: "原爆博物館 → 鍋冠山夜景",
                 location: "廣島県/長崎県",
                 coordinates: [34.3915, 132.4531], // 原爆博物館
-                secondaryCoords: [32.7300873,129.8687025], // 鍋冠山
+                secondaryCoords: [32.7293375,129.866559], // 鍋冠山
                 accommodation: "長崎希爾頓酒店",
                 accommodationCoords: [32.7533088, 129.8681348],
                 type: "attraction",
+                notes: "搭新幹線前往長崎，晚上看長崎夜景"
             },
             {
                 day: 4,
                 title: "口之津賞海豚 & 島原市",
                 location: "長崎県",
-                coordinates: [32.6085898,130.1869544], // 口之津
+                coordinates: [32.6091356,130.1867837], // 口之津
                 secondaryCoords: [32.7668139, 130.3730529], // 熊本渡輪往熊本碼頭（島原側）
                 accommodation: "ANA皇冠假日酒店 熊本新天空",
                 accommodationCoords: [32.7934354, 130.6965473],
@@ -1361,17 +1408,19 @@
                 secondaryCoords: [33.2779057, 131.446179], // 近鐵別府空中纜車
                 accommodation: "山莊神和苑",
                 accommodationCoords: [33.3162164, 131.4714025],
-                hotelPhoto: "images/山莊神和苑.PNG"
+                hotelPhoto: "images/山莊神和苑.PNG",  // ← 加這一行!
+                
             },
             {
                 day: 7,
-                title: "海地獄 & 太宰府天滿宮 & 博多",
+                title: "地獄海 & 太宰府天滿宮 & 博多",
                 location: "別府/太宰府/博多",
-                coordinates: [33.3168159,131.4638621], // 別府海地獄
+                coordinates: [33.2831, 131.5078], // 別府地獄海（鐵輪）
                 secondaryCoords: [33.5213697, 130.5348239], // 太宰府天滿宮
                 accommodation: "福岡中洲皇家花園",
                 accommodationCoords: [33.5948042, 130.4043468],
                 type: "attraction",
+                
             },
             {
                 day: 8,
@@ -2114,8 +2163,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
